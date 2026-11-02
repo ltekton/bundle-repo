@@ -1,0 +1,72 @@
+min_version = "2026.10.24"
+
+[tools]
+python = "3.14"
+uv = "latest"
+
+[settings]
+lockfile = true
+lockfile_platforms = [
+  "linux-arm64", "linux-arm64-musl", "linux-x64", "linux-x64-musl",
+  "macos-arm64", "macos-x64", "windows-x64",
+]
+
+[env]
+PYTHONUTF8 = "1"
+
+[tasks.install]
+description = "Install package and all development dependencies"
+run = "uv sync --all-groups"
+
+[tasks.clean]
+description = "Remove build and test artifacts"
+run = "uv run python scripts/clean.py"
+
+[tasks.lint]
+run = "uv run ruff check bundle_repo.py tests scripts"
+[tasks.lint-fix]
+run = "uv run ruff check --fix bundle_repo.py tests scripts"
+[tasks.format]
+run = "uv run ruff format bundle_repo.py tests scripts"
+[tasks.format-check]
+run = "uv run ruff format --check bundle_repo.py tests scripts"
+[tasks.typecheck]
+run = "uv run pyrefly check"
+
+[tasks.test]
+run = "uv run python -m pytest tests"
+[tasks.test-unit]
+run = "uv run python -m pytest tests/unit -m unit"
+[tasks.test-services]
+run = "uv run python -m pytest tests/services"
+[tasks.test-integration]
+run = "uv run python -m pytest tests/integration -m integration"
+[tasks.test-security]
+run = "uv run python -m pytest tests/security -m security"
+[tasks.test-property]
+run = "uv run python -m pytest tests/property -m property"
+[tasks.test-failure]
+run = "uv run python -m pytest tests/failure_injection -m failure_injection"
+[tasks.test-coverage]
+run = "uv run python -m pytest tests --cov=bundle_repo --cov-branch --cov-context=test --cov-report=term-missing --cov-report=html:htmlcov --cov-fail-under=75 --no-cov-on-fail"
+
+[tasks.traceability]
+run = "uv run python scripts/traceability.py --check"
+[tasks.traceability-report]
+run = "uv run python scripts/traceability.py --output docs/TRACEABILITY.md"
+
+[tasks.check-quick]
+depends = ["lint", "format-check", "typecheck"]
+[tasks.check]
+depends = ["lint", "format-check", "typecheck", "traceability", "test"]
+[tasks.ci]
+depends = ["lint", "format-check", "typecheck", "traceability", "test-coverage"]
+
+[tasks.build]
+depends = ["clean"]
+run = "uv build --no-sources"
+[tasks.package-check]
+depends = ["build"]
+run = "uv run python scripts/consumer_smoke.py"
+[tasks.release-check]
+depends = ["ci", "package-check"]

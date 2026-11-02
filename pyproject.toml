@@ -1,0 +1,103 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "bundle-repo"
+version = "0.1.0"
+description = "Create, verify, and reconstruct hardened text-safe Git index bundles."
+readme = "README.md"
+requires-python = ">=3.14"
+license = "Apache-2.0"
+authors = [{ name = "bln" }]
+keywords = ["bundle", "repository", "git", "archive", "base64", "integrity", "verification"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: Apache Software License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.14",
+  "Topic :: System :: Archiving",
+  "Topic :: Software Development :: Version Control :: Git",
+  "Typing :: Typed",
+]
+dependencies = []
+
+[dependency-groups]
+dev = [
+  "hatchling>=1.27",
+  "hypothesis>=6,<7",
+  "pre-commit>=4,<5",
+  "pyrefly>=1.2,<2",
+  "pytest>=9,<10",
+  "pytest-cov>=7,<8",
+  "pytest-timeout>=2.4,<3",
+  "ruff>=0.11,<1",
+]
+
+[project.scripts]
+bundle-repo = "bundle_repo:main"
+
+[tool.hatch.build.targets.wheel]
+include = ["bundle_repo.py"]
+
+[tool.hatch.build.targets.sdist]
+include = ["bundle_repo.py", "README.md", "LICENSE", "CHANGELOG.md", "docs", "pyproject.toml"]
+
+[tool.pytest.ini_options]
+minversion = "9.0"
+testpaths = ["tests"]
+timeout = 30
+addopts = ["-ra", "--strict-config", "--strict-markers"]
+markers = [
+  "unit: fast isolated unit tests",
+  "service: component/service contract tests",
+  "manifest: manifest schema and cross-field validation tests",
+  "integration: Git and filesystem integration tests",
+  "roundtrip: serialization and reconstruction fidelity tests",
+  "security: hostile-input and containment tests",
+  "failure_injection: transactional fault and rollback tests",
+  "property: Hypothesis property-based tests",
+  "cli: command-line boundary tests",
+  "slow: resource-intensive tests",
+  "req(*ids): normative requirement identifiers covered by a test",
+]
+
+[tool.coverage.run]
+branch = true
+relative_files = true
+source = ["bundle_repo"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+precision = 2
+fail_under = 75
+exclude_also = [
+  'if __name__ == "__main__":',
+  "if TYPE_CHECKING:",
+  "@overload",
+]
+
+[tool.ruff]
+target-version = "py314"
+line-length = 100
+include = ["bundle_repo.py", "tests/**/*.py", "scripts/**/*.py"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "C4", "PIE", "RET", "SIM", "PERF", "RUF"]
+ignore = ["E501"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "lf"
+docstring-code-format = true
+
+[tool.pyrefly]
+python-version = "3.14.0"
+search-path = [".", "scripts"]
+project-includes = ["bundle_repo.py", "tests/", "scripts/"]
+project-excludes = [".venv/", "build/", "dist/", "htmlcov/"]
