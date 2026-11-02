@@ -1,9 +1,19 @@
 from pathlib import Path
-import bundle_repo as br
+
 from conftest import git
 
-def test_unborn_repo(repo:Path):
-    (repo/"x").write_text("x"); git(repo,"add","x"); m=br.GitRepository(repo).metadata(); assert m.branch is not None and m.commit is None
+import bundle_repo as br
 
-def test_detached_head(committed_repo:Path):
-    expected=git(committed_repo,"rev-parse","HEAD").strip(); git(committed_repo,"checkout","--detach","-q"); m=br.GitRepository(committed_repo).metadata(); assert m.branch is None and m.commit==expected
+
+def test_unborn_repo(repo: Path):
+    (repo / "x").write_text("x")
+    git(repo, "add", "x")
+    m = br.GitRepository(repo).metadata()
+    assert m.branch is not None and m.commit is None
+
+
+def test_detached_head(committed_repo: Path):
+    expected = git(committed_repo, "rev-parse", "HEAD").strip()
+    git(committed_repo, "checkout", "--detach", "-q")
+    m = br.GitRepository(committed_repo).metadata()
+    assert m.branch is None and m.commit == expected
