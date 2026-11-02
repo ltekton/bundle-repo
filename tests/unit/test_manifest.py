@@ -1,7 +1,7 @@
 import pytest
-from factories import manifest
 
 import bundle_repo as br
+from tests.factories import manifest
 
 pytestmark = pytest.mark.unit
 
@@ -14,7 +14,10 @@ def test_manifest_roundtrip():
 
 def test_manifest_self_hash_detects_change():
     raw = manifest().to_dict()
-    raw["summary"]["payload_bytes"] += 1
+    summary = br.require_mapping(raw["summary"], "summary")
+    payload_bytes = br.require_int(summary["payload_bytes"], "summary.payload_bytes")
+    summary["payload_bytes"] = payload_bytes + 1
+
     with pytest.raises(br.IntegrityError, match="SHA-256"):
         br.Manifest.from_dict(raw)
 

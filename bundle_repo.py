@@ -123,6 +123,18 @@ def require_str(value: object, name: str) -> str:
     return cast(str, value)
 
 
+def require_mapping(value: object, name: str) -> dict[str, object]:
+    if not isinstance(value, dict):
+        raise FormatError(f"{name} must be an object")
+    return cast(dict[str, object], value)
+
+
+def require_array(value: object, name: str) -> list[object]:
+    if not isinstance(value, list):
+        raise FormatError(f"{name} must be an array")
+    return cast(list[object], value)
+
+
 def require_sha256(value: object, name: str) -> str:
     text = require_str(value, name)
     require(
@@ -283,13 +295,12 @@ class RepositoryMetadata:
         branch = raw.get("branch")
         commit = raw.get("commit")
         dirty = raw.get("dirty")
-        require(
-            branch is None or isinstance(branch, str), "repository.branch must be string or null"
-        )
-        require(
-            commit is None or isinstance(commit, str), "repository.commit must be string or null"
-        )
-        require(isinstance(dirty, bool), "repository.dirty must be boolean")
+        if branch is not None and not isinstance(branch, str):
+            raise FormatError("repository.branch must be string or null")
+        if commit is not None and not isinstance(commit, str):
+            raise FormatError("repository.commit must be string or null")
+        if not isinstance(dirty, bool):
+            raise FormatError("repository.dirty must be boolean")
         return cls(branch, commit, dirty)
 
 
@@ -556,18 +567,16 @@ class Manifest:
         )
         bundle_id = require_str(raw.get("bundle_id"), "bundle_id")
         require(bool(bundle_id), "bundle_id must not be empty")
-        selection = raw.get("selection")
-        summary = raw.get("summary")
-        require(isinstance(selection, dict), "selection must be an object")
-        require(isinstance(summary, dict), "summary must be an object")
-        includes = tuple(require_str(x, "include pattern") for x in selection.get("include", []))
-        excludes = tuple(require_str(x, "exclude pattern") for x in selection.get("exclude", []))
+        selection = require_mapping(raw.get("selection"), "selection")
+        summary = require_mapping(raw.get("summary"), "summary")
+        include_raw = require_array(selection.get("include", []), "selection.include")
+        exclude_raw = require_array(selection.get("exclude", []), "selection.exclude")
+        includes = tuple(require_str(x, "include pattern") for x in include_raw)
+        excludes = tuple(require_str(x, "exclude pattern") for x in exclude_raw)
         for p in includes + excludes:
             pattern_matches("x", p)
-        entries_raw = raw.get("entries")
-        parts_raw = raw.get("parts")
-        require(isinstance(entries_raw, list), "entries must be an array")
-        require(isinstance(parts_raw, list), "parts must be an array")
+        entries_raw = require_array(raw.get("entries"), "entries")
+        parts_raw = require_array(raw.get("parts"), "parts")
         entries = tuple(ManifestEntry.from_dict(x) for x in entries_raw)
         parts = tuple(PartInfo.from_dict(x) for x in parts_raw)
         paths = [str(x.path) for x in entries]
@@ -742,7 +751,7 @@ class PartReader:
                             raw = strict_json_loads(line)
                         except (json.JSONDecodeError, UnicodeDecodeError) as exc:
                             raise FormatError(f"invalid JSON in {path.name}:{lineno}") from exc
-                        require(isinstance(raw, dict), "record must be an object")
+                        raw = require_mapping(raw, "record")
                         kind = raw.get("record")
                         if kind == "content":
                             yield ContentRecord.from_dict(raw)

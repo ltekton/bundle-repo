@@ -1,7 +1,7 @@
 import pytest
-from factories import content, manifest
 
 import bundle_repo as br
+from tests.factories import content, manifest
 
 
 def test_complete_content_passes():

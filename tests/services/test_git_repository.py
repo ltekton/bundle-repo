@@ -1,8 +1,7 @@
 from pathlib import Path
 
-from conftest import git
-
 import bundle_repo as br
+from tests.helpers import git
 
 
 def test_unborn_repo(repo: Path):

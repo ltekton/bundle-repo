@@ -2,9 +2,9 @@ import os
 from pathlib import Path
 
 import pytest
-from conftest import git
 
 import bundle_repo as br
+from tests.helpers import git
 
 pytestmark = pytest.mark.failure_injection
 

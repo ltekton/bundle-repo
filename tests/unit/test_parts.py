@@ -1,9 +1,9 @@
 from pathlib import Path
 
 import pytest
-from factories import content
 
 import bundle_repo as br
+from tests.factories import content
 
 pytestmark = pytest.mark.unit
 

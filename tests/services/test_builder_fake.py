@@ -1,8 +1,7 @@
 from pathlib import Path
 
-from factories import OID
-
 import bundle_repo as br
+from tests.factories import OID
 
 
 class FakeRepository:
